@@ -11,6 +11,16 @@ use Illuminate\View\View;
 
 class EventController extends Controller
 {
+    public function index(): View
+    {
+        $events = Event::query()
+            ->select(['id', 'name', 'date', 'capacity'])
+            ->latest('date')
+            ->get();
+
+        return view('events.index', compact('events'));
+    }
+
     public function create(): View
     {
         return view('events.create');
