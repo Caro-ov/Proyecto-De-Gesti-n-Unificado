@@ -15,7 +15,10 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('events.create')" :active="request()->routeIs('events.*')">
+                    <x-nav-link :href="route('events.index')" :active="request()->routeIs('events.index')">
+                        Eventos
+                    </x-nav-link>
+                    <x-nav-link :href="route('events.create')" :active="request()->routeIs('events.create')">
                         Crear evento
                     </x-nav-link>
                 </div>
@@ -73,7 +76,10 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('events.create')" :active="request()->routeIs('events.*')">
+            <x-responsive-nav-link :href="route('events.index')" :active="request()->routeIs('events.index')">
+                Eventos
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('events.create')" :active="request()->routeIs('events.create')">
                 Crear evento
             </x-responsive-nav-link>
         </div>
