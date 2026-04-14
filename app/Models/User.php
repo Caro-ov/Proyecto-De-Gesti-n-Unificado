@@ -10,7 +10,11 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    // ... campos fillable existentes ...
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+    ];
 
     /**
      * Los roles que tiene este usuario
@@ -37,10 +41,18 @@ class User extends Authenticatable
     }
 
     /**
-   * Los eventos creados por este usuario
-   */
-      public function events()
+     * Verificar si el usuario tiene un rol activo específico.
+     */
+    public function hasActiveRole(string $roleName): bool
     {
-    return $this->hasMany(Event::class);
+        return $this->activeRoles()->where('name', $roleName)->exists();
+    }
+
+    /**
+     * Los eventos creados por este usuario.
+     */
+    public function events()
+    {
+        return $this->hasMany(Event::class);
     }
 }
