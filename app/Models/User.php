@@ -2,57 +2,46 @@
 
 namespace App\Models;
 
+use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
+#[Fillable(['name', 'email', 'password', 'role', 'status'])]
+#[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
+    /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-    ];
-
     /**
-     * Los roles que tiene este usuario
+     * El rol de este usuario
      */
-    public function roles()
+    public function role()
     {
-        return $this->belongsToMany(Role::class, 'user_roles');
+        return $this->belongsTo(Role::class, 'role', 'name');
     }
 
     /**
-     * Verificar si el usuario tiene un rol específico
-     */
-    public function hasRole(string $roleName): bool
-    {
-        return $this->roles()->where('name', $roleName)->exists();
-    }
-
-    /**
-     * Verificar si el usuario tiene alguno de los roles especificados
-     */
-    public function hasAnyRole(array $roles): bool
-    {
-        return $this->roles()->whereIn('name', $roles)->exists();
-    }
-
-    /**
-     * Verificar si el usuario tiene un rol activo específico.
-     */
-    public function hasActiveRole(string $roleName): bool
-    {
-        return $this->activeRoles()->where('name', $roleName)->exists();
-    }
-
-    /**
-     * Los eventos creados por este usuario.
+     * Los eventos creados por este usuario
      */
     public function events()
     {
         return $this->hasMany(Event::class);
+    }
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ];
     }
 }
