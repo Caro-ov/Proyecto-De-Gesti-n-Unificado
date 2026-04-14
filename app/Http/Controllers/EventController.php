@@ -26,7 +26,35 @@ class EventController extends Controller
         return view('events.create');
     }
 
+    public function edit(Event $event): View
+    {
+        return view('events.edit', compact('event'));
+    }
+
     public function store(Request $request): RedirectResponse
+    {
+        $validated = $this->validateEvent($request);
+        $validated['user_id'] = $request->user()->id;
+
+        Event::create($validated);
+
+        return redirect()
+            ->route('events.create')
+            ->with('status', 'Evento creado correctamente.');
+    }
+
+    public function update(Request $request, Event $event): RedirectResponse
+    {
+        $validated = $this->validateEvent($request);
+
+        $event->update($validated);
+
+        return redirect()
+            ->route('events.index')
+            ->with('status', 'Evento actualizado correctamente.');
+    }
+
+    protected function validateEvent(Request $request): array
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -53,12 +81,7 @@ class EventController extends Controller
             'Y-m-d H:i',
             "{$validated['date']} {$validated['time']}"
         );
-        $validated['user_id'] = $request->user()->id;
 
-        Event::create($validated);
-
-        return redirect()
-            ->route('events.create')
-            ->with('status', 'Evento creado correctamente.');
+        return $validated;
     }
 }
