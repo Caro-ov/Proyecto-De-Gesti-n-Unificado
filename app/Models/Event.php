@@ -37,6 +37,7 @@ class Event extends Model
     {
         return [
             'date' => 'date',
+            'time' => 'datetime',
             'has_parking' => 'boolean',
             'capacity' => 'integer',
             'parking_slots' => 'integer',
