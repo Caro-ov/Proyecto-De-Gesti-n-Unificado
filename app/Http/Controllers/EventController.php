@@ -21,6 +21,13 @@ class EventController extends Controller
         return view('events.index', compact('events'));
     }
 
+    public function show(Event $event): View
+    {
+        $event->loadMissing('user');
+
+        return view('events.show', compact('event'));
+    }
+
     public function create(): View
     {
         return view('events.create');

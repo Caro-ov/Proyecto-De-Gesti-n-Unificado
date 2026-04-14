@@ -33,7 +33,7 @@
                                         <th scope="col" class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
                                             Capacidad
                                         </th>
-                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
+                                        <th scope="col" class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
                                             Acciones
                                         </th>
                                     </tr>
@@ -50,7 +50,10 @@
                                             <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
                                                 {{ $event->capacity }}
                                             </td>
-                                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+                                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm">
+                                                <a href="{{ route('events.show', $event) }}" class="mr-3 font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300">
+                                                    Ver detalle
+                                                </a>
                                                 <a
                                                     href="{{ route('events.edit', $event) }}"
                                                     class="inline-flex items-center rounded-md bg-amber-500 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-amber-400"
