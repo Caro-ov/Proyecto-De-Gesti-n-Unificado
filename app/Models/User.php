@@ -2,45 +2,37 @@
 
 namespace App\Models;
 
+// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
+#[Fillable(['name', 'email', 'password'])]
+#[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
+    /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
-    // ... campos fillable existentes ...
-
-    /**
-     * Los roles que tiene este usuario
-     */
-    public function roles()
+    public function events(): HasMany
     {
-        return $this->belongsToMany(Role::class, 'user_roles');
+        return $this->hasMany(Event::class);
     }
 
     /**
-     * Verificar si el usuario tiene un rol específico
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
      */
-    public function hasRole(string $roleName): bool
+    protected function casts(): array
     {
-        return $this->roles()->where('name', $roleName)->exists();
-    }
-
-    /**
-     * Verificar si el usuario tiene alguno de los roles especificados
-     */
-    public function hasAnyRole(array $roles): bool
-    {
-        return $this->roles()->whereIn('name', $roles)->exists();
-    }
-
-    /**
-   * Los eventos creados por este usuario
-   */
-      public function events()
-    {
-    return $this->hasMany(Event::class);
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ];
     }
 }
