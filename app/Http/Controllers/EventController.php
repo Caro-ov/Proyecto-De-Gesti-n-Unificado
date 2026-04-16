@@ -61,6 +61,15 @@ class EventController extends Controller
             ->with('status', 'Evento actualizado correctamente.');
     }
 
+    public function destroy(Event $event): RedirectResponse
+    {
+        $event->delete();
+
+        return redirect()
+            ->route('events.index')
+            ->with('status', 'Evento eliminado correctamente.');
+    }
+
     protected function validateEvent(Request $request): array
     {
         $validated = $request->validate([
