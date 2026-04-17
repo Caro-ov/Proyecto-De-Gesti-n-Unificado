@@ -84,8 +84,9 @@ class EventController extends Controller
             'parking_slots' => [
                 'nullable',
                 'integer',
-                'min:0',
+                'min:1',
                 Rule::requiredIf(fn () => $request->boolean('has_parking')),
+                Rule::prohibitedIf(fn () => ! $request->boolean('has_parking')),
             ],
         ]);
 
