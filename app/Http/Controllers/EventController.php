@@ -2,11 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\EventRequest;
 use App\Models\Event;
-use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class EventController extends Controller
@@ -38,9 +36,9 @@ class EventController extends Controller
         return view('events.edit', compact('event'));
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(EventRequest $request): RedirectResponse
     {
-        $validated = $this->validateEvent($request);
+        $validated = $request->validated();
         $validated['user_id'] = $request->user()->id;
 
         Event::create($validated);
@@ -50,9 +48,9 @@ class EventController extends Controller
             ->with('status', 'Evento creado correctamente.');
     }
 
-    public function update(Request $request, Event $event): RedirectResponse
+    public function update(EventRequest $request, Event $event): RedirectResponse
     {
-        $validated = $this->validateEvent($request);
+        $validated = $request->validated();
 
         $event->update($validated);
 
@@ -70,34 +68,4 @@ class EventController extends Controller
             ->with('status', 'Evento eliminado correctamente.');
     }
 
-    protected function validateEvent(Request $request): array
-    {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'date' => ['required', 'date'],
-            'time' => ['required', 'date_format:H:i'],
-            'location' => ['required', 'string', 'max:255'],
-            'status' => ['required', 'string', 'max:100'],
-            'capacity' => ['required', 'integer', 'min:1'],
-            'has_parking' => ['nullable', 'boolean'],
-            'parking_slots' => [
-                'nullable',
-                'integer',
-                'min:0',
-                Rule::requiredIf(fn () => $request->boolean('has_parking')),
-            ],
-        ]);
-
-        $validated['has_parking'] = $request->boolean('has_parking');
-        $validated['parking_slots'] = $validated['has_parking']
-            ? $validated['parking_slots']
-            : null;
-        $validated['time'] = Carbon::createFromFormat(
-            'Y-m-d H:i',
-            "{$validated['date']} {$validated['time']}"
-        );
-
-        return $validated;
-    }
 }

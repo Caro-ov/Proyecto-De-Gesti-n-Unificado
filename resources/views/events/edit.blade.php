@@ -67,7 +67,7 @@
 
                             <div>
                                 <x-input-label for="parking_slots" value="Cupos de parqueadero" />
-                                <x-text-input id="parking_slots" name="parking_slots" type="number" min="0" class="mt-1 block w-full" :value="old('parking_slots', $event->parking_slots)" />
+                                <x-text-input id="parking_slots" name="parking_slots" type="number" min="1" class="mt-1 block w-full" :value="old('parking_slots', $event->parking_slots)" />
                                 <x-input-error :messages="$errors->get('parking_slots')" class="mt-2" />
                             </div>
                         </div>
