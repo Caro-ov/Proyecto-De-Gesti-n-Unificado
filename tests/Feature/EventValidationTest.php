@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use Carbon\Carbon;
 use Tests\TestCase;
 
 class EventValidationTest extends TestCase
@@ -97,6 +98,24 @@ class EventValidationTest extends TestCase
 
         $response
             ->assertSessionHasErrors(['parking_slots'])
+            ->assertRedirect('/events/create');
+    }
+
+    public function test_event_datetime_cannot_be_in_the_past_when_creating_an_event(): void
+    {
+        $user = $this->authenticatedUser();
+        $pastDateTime = Carbon::now()->subHour();
+
+        $response = $this
+            ->actingAs($user)
+            ->from('/events/create')
+            ->post('/events', $this->validEventPayload([
+                'date' => $pastDateTime->format('Y-m-d'),
+                'time' => $pastDateTime->format('H:i'),
+            ]));
+
+        $response
+            ->assertSessionHasErrors(['time'])
             ->assertRedirect('/events/create');
     }
 
