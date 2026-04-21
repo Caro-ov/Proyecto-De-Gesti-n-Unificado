@@ -11,5 +11,9 @@ test('database seeder loads roles users and events', function () {
     expect(User::count())->toBe(4);
     expect(Event::count())->toBe(3);
     expect(User::where('email', 'admin@example.com')->value('role'))->toBe('admin');
-    expect(Event::where('name', 'Lanzamiento de Plataforma')->first()->user)->not->toBeNull();
+    expect(
+        Event::query()
+            ->whereHas('user', fn ($query) => $query->where('email', 'admin@example.com'))
+            ->exists()
+    )->toBeTrue();
 });

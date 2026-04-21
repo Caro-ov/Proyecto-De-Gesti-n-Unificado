@@ -25,6 +25,67 @@ class User extends Authenticatable
     }
 
     /**
+     * Determine whether the user has the given role name.
+     */
+    public function hasRole(string $roleName): bool
+    {
+        return $this->role === $roleName;
+    }
+
+    /**
+     * Determine whether the user has any of the given role names.
+     *
+     * @param array<int, string> $roles
+     */
+    public function hasAnyRole(array $roles): bool
+    {
+        return in_array($this->role, $roles, true);
+    }
+
+    /**
+     * Determine whether the user account is active.
+     */
+    public function isActive(): bool
+    {
+        return (bool) $this->status;
+    }
+
+    /**
+     * Determine whether the user has an active role.
+     */
+    public function hasActiveRole(?string $roleName = null): bool
+    {
+        if (! $this->isActive()) {
+            return false;
+        }
+
+        $query = $this->role()->where('status', true);
+
+        if ($roleName !== null) {
+            $query->where('name', $roleName);
+        }
+
+        return $query->exists();
+    }
+
+    /**
+     * Determine whether the user has any active role from the given list.
+     *
+     * @param array<int, string> $roles
+     */
+    public function hasAnyActiveRole(array $roles): bool
+    {
+        if (! $this->isActive()) {
+            return false;
+        }
+
+        return $this->role()
+            ->where('status', true)
+            ->whereIn('name', $roles)
+            ->exists();
+    }
+
+    /**
      * Los eventos creados por este usuario
      */
     public function events()

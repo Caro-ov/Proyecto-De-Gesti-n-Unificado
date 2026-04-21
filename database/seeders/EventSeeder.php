@@ -54,7 +54,10 @@ class EventSeeder extends Seeder
         ];
 
         foreach ($events as $event) {
-            $owner = User::where('email', $event['user_email'])->first();
+            $ownerId = User::query()
+                ->where('email', $event['user_email'])
+                ->sole()
+                ->id;
 
             Event::updateOrCreate(
                 [
@@ -69,7 +72,7 @@ class EventSeeder extends Seeder
                     'capacity' => $event['capacity'],
                     'has_parking' => $event['has_parking'],
                     'parking_slots' => $event['parking_slots'],
-                    'user_id' => $owner?->id,
+                    'user_id' => $ownerId,
                 ],
             );
         }

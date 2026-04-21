@@ -18,9 +18,11 @@
                     <x-nav-link :href="route('events.index')" :active="request()->routeIs('events.index')">
                         Eventos
                     </x-nav-link>
-                    <x-nav-link :href="route('events.create')" :active="request()->routeIs('events.create')">
-                        Crear evento
-                    </x-nav-link>
+                    @can('create', \App\Models\Event::class)
+                        <x-nav-link :href="route('events.create')" :active="request()->routeIs('events.create')">
+                            Crear evento
+                        </x-nav-link>
+                    @endcan
                 </div>
             </div>
 
@@ -79,9 +81,11 @@
             <x-responsive-nav-link :href="route('events.index')" :active="request()->routeIs('events.index')">
                 Eventos
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('events.create')" :active="request()->routeIs('events.create')">
-                Crear evento
-            </x-responsive-nav-link>
+            @can('create', \App\Models\Event::class)
+                <x-responsive-nav-link :href="route('events.create')" :active="request()->routeIs('events.create')">
+                    Crear evento
+                </x-responsive-nav-link>
+            @endcan
         </div>
 
         <!-- Responsive Settings Options -->
