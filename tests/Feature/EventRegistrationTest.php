@@ -99,7 +99,10 @@ test('users are added to the waitlist when the event has no remaining capacity',
 
     $this->actingAs($waitlistedUser)
         ->post(route('events.registrations.store', $event))
-        ->assertRedirect(route('events.show', $event, absolute: false));
+        ->assertRedirect(route('events.show', $event, absolute: false))
+        ->assertSessionHasErrors([
+            'registration' => 'El evento ya no tiene cupos disponibles. Tu inscripción quedó registrada en lista de espera y te avisaremos si se libera un lugar.',
+        ]);
 
     expect(
         EventRegistration::query()
