@@ -2,12 +2,16 @@
 
 namespace Tests\Feature;
 
+use App\Models\Role;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class EventValidationTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_name_is_required_when_creating_an_event(): void
     {
         $user = $this->authenticatedUser();
@@ -140,6 +144,16 @@ class EventValidationTest extends TestCase
 
     private function authenticatedUser(): User
     {
-        return User::factory()->make(['id' => 1]);
+        Role::query()->firstOrCreate(
+            ['name' => 'coordinator'],
+            [
+                'description' => 'Coordinador de eventos',
+                'status' => true,
+            ],
+        );
+
+        return User::factory()->create([
+            'role' => 'coordinator',
+        ]);
     }
 }

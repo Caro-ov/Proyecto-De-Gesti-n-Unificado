@@ -50,6 +50,15 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        if (! $this->user()?->hasActiveRole()) {
+            Auth::logout();
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'email' => 'Tu cuenta no tiene un rol activo.',
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 
