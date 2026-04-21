@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Notifications\Notifiable;
 
 #[Fillable(['name', 'email', 'password', 'role', 'status'])]
@@ -91,6 +93,31 @@ class User extends Authenticatable
     public function events()
     {
         return $this->hasMany(Event::class);
+    }
+
+    /**
+     * Las inscripciones del usuario a eventos.
+     */
+    public function registrations(): HasMany
+    {
+        return $this->hasMany(EventRegistration::class);
+    }
+
+    /**
+     * Los eventos a los que el usuario se ha inscrito.
+     */
+    public function registeredEvents(): BelongsToMany
+    {
+        return $this->belongsToMany(Event::class, 'event_registrations')
+            ->withPivot([
+                'id',
+                'status',
+                'registered_at',
+                'cancelled_at',
+                'attended_at',
+                'notes',
+            ])
+            ->withTimestamps();
     }
 
     /**

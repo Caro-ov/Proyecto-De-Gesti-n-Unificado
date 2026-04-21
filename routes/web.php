@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\EventRegistrationController;
 use App\Http\Controllers\ProfileController;
 use App\Models\Event;
 use Illuminate\Support\Facades\Route;
@@ -28,6 +29,12 @@ Route::middleware(['auth', 'active.role'])->group(function () {
         Route::post('/', [EventController::class, 'store'])
             ->can('create', Event::class)
             ->name('store');
+        Route::post('/{event}/registrations', [EventRegistrationController::class, 'store'])
+            ->name('registrations.store');
+        Route::patch('/{event}/registrations/{registration}', [EventRegistrationController::class, 'update'])
+            ->name('registrations.update');
+        Route::delete('/{event}/registrations/{registration}', [EventRegistrationController::class, 'destroy'])
+            ->name('registrations.destroy');
         Route::get('/{event}/edit', [EventController::class, 'edit'])
             ->can('update', 'event')
             ->name('edit');
