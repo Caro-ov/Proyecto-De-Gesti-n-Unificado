@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\EventStatus;
 use App\Models\Event;
 use App\Models\Role;
 use App\Models\User;
@@ -59,7 +60,7 @@ test('coordinators can create events', function () {
             'date' => Carbon::now()->addWeek()->format('Y-m-d'),
             'time' => '10:00',
             'location' => 'Salon A',
-            'status' => 'programado',
+            'status' => EventStatus::OPEN->value,
             'capacity' => 50,
             'has_parking' => 0,
             'parking_slots' => null,
@@ -82,7 +83,7 @@ test('coordinators can edit events but can not delete them', function () {
         'date' => Carbon::now()->addWeek()->toDateString(),
         'time' => Carbon::now()->addWeek()->setTime(11, 0, 0),
         'location' => 'Salon B',
-        'status' => 'programado',
+        'status' => EventStatus::OPEN->value,
         'capacity' => 80,
         'has_parking' => false,
         'parking_slots' => null,
@@ -111,7 +112,7 @@ test('administrators can delete events', function () {
         'date' => Carbon::now()->addWeek()->toDateString(),
         'time' => Carbon::now()->addWeek()->setTime(12, 0, 0),
         'location' => 'Salon C',
-        'status' => 'programado',
+        'status' => EventStatus::OPEN->value,
         'capacity' => 100,
         'has_parking' => true,
         'parking_slots' => 20,
@@ -142,7 +143,7 @@ test('regular users can view events but can not edit them', function () {
         'date' => Carbon::now()->addWeek()->toDateString(),
         'time' => Carbon::now()->addWeek()->setTime(8, 30, 0),
         'location' => 'Salon D',
-        'status' => 'publicado',
+        'status' => EventStatus::ACTIVE->value,
         'capacity' => 60,
         'has_parking' => false,
         'parking_slots' => null,

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\EventStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -40,6 +41,7 @@ class Event extends Model
         return [
             'date' => 'date',
             'time' => 'datetime',
+            'status' => EventStatus::class,
             'has_parking' => 'boolean',
             'capacity' => 'integer',
             'parking_slots' => 'integer',
@@ -85,5 +87,31 @@ class Event extends Model
     public function remainingCapacity(?int $excludeRegistrationId = null): int
     {
         return max(0, $this->capacity - $this->confirmedRegistrationsCount($excludeRegistrationId));
+    }
+
+    public function statusEnum(): ?EventStatus
+    {
+        if ($this->status instanceof EventStatus) {
+            return $this->status;
+        }
+
+        return EventStatus::tryFrom((string) $this->status);
+    }
+
+    public function acceptsRegistrations(): bool
+    {
+        return $this->statusEnum()?->acceptsRegistrations() ?? false;
+    }
+
+    public function registrationRestrictionMessage(): ?string
+    {
+        return $this->statusEnum()?->registrationRestrictionMessage()
+            ?? 'Las inscripciones solo estan disponibles para eventos activos o abiertos.';
+    }
+
+    public function statusLabel(): string
+    {
+        return $this->statusEnum()?->label()
+            ?? ucfirst((string) $this->status);
     }
 }

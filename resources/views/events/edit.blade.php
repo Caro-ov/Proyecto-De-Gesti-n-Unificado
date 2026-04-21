@@ -53,7 +53,21 @@
 
                             <div>
                                 <x-input-label for="status" value="Estado" />
-                                <x-text-input id="status" name="status" type="text" class="mt-1 block w-full" :value="old('status', $event->status)" required />
+                                <select
+                                    id="status"
+                                    name="status"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
+                                    required
+                                >
+                                    @foreach (\App\Enums\EventStatus::cases() as $status)
+                                        <option
+                                            value="{{ $status->value }}"
+                                            @selected(old('status', $event->status?->value ?? $event->status) === $status->value)
+                                        >
+                                            {{ $status->label() }}
+                                        </option>
+                                    @endforeach
+                                </select>
                                 <x-input-error :messages="$errors->get('status')" class="mt-2" />
                             </div>
                         </div>
