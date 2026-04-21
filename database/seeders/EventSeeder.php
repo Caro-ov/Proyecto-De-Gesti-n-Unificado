@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\EventStatus;
 use App\Models\Event;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -21,7 +22,7 @@ class EventSeeder extends Seeder
                 'date' => Carbon::now()->addDays(7)->toDateString(),
                 'time' => Carbon::now()->addDays(7)->setTime(9, 0, 0),
                 'location' => 'Pescaito Beach',
-                'status' => 'Programado',
+                'status' => EventStatus::OPEN->value,
                 'capacity' => 120,
                 'has_parking' => true,
                 'parking_slots' => 40,
@@ -33,7 +34,7 @@ class EventSeeder extends Seeder
                 'date' => Carbon::now()->addDays(12)->toDateString(),
                 'time' => Carbon::now()->addDays(12)->setTime(14, 30, 0),
                 'location' => 'Sala de Juntas B',
-                'status' => 'Confirmado',
+                'status' => EventStatus::ACTIVE->value,
                 'capacity' => 35,
                 'has_parking' => false,
                 'parking_slots' => null,
@@ -45,7 +46,7 @@ class EventSeeder extends Seeder
                 'date' => Carbon::now()->addDays(20)->toDateString(),
                 'time' => Carbon::now()->addDays(20)->setTime(10, 0, 0),
                 'location' => 'Plaza Central',
-                'status' => 'Abierto',
+                'status' => EventStatus::OPEN->value,
                 'capacity' => 250,
                 'has_parking' => true,
                 'parking_slots' => 90,

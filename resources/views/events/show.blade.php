@@ -43,6 +43,8 @@
                         </div>
                     </div>
 
+                    @php($registrationRestrictionMessage = $event->registrationRestrictionMessage())
+
                     @if ($currentRegistration)
                         <div class="mb-6 rounded-lg border border-indigo-200 bg-indigo-50 p-4 text-indigo-900 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-100">
                             <p class="text-sm font-semibold">Tu estado de inscripcion</p>
@@ -60,6 +62,10 @@
                                         Cancelar inscripcion
                                     </button>
                                 </form>
+                            @elseif ($registrationRestrictionMessage)
+                                <p class="mt-4 text-sm text-amber-800 dark:text-amber-200">
+                                    {{ $registrationRestrictionMessage }}
+                                </p>
                             @elseif (auth()->user()->can('create', [\App\Models\EventRegistration::class, $event]))
                                 <form method="POST" action="{{ route('events.registrations.store', $event) }}" class="mt-4">
                                     @csrf
@@ -75,18 +81,24 @@
                         </div>
                     @elseif (auth()->user()->can('create', [\App\Models\EventRegistration::class, $event]))
                         <div class="mb-6 rounded-lg border border-indigo-200 bg-indigo-50 p-4 text-indigo-900 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-100">
-                            <p class="text-sm text-indigo-800 dark:text-indigo-100">Aun no tienes una inscripcion para este evento.</p>
+                            @if ($registrationRestrictionMessage)
+                                <p class="text-sm text-amber-800 dark:text-amber-200">{{ $registrationRestrictionMessage }}</p>
+                            @else
+                                <p class="text-sm text-indigo-800 dark:text-indigo-100">Aun no tienes una inscripcion para este evento.</p>
+                            @endif
 
-                            <form method="POST" action="{{ route('events.registrations.store', $event) }}" class="mt-4">
-                                @csrf
+                            @if (! $registrationRestrictionMessage)
+                                <form method="POST" action="{{ route('events.registrations.store', $event) }}" class="mt-4">
+                                    @csrf
 
-                                <button
-                                    type="submit"
-                                    class="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500"
-                                >
-                                    Inscribirme
-                                </button>
-                            </form>
+                                    <button
+                                        type="submit"
+                                        class="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500"
+                                    >
+                                        Inscribirme
+                                    </button>
+                                </form>
+                            @endif
                         </div>
                     @endif
 
@@ -123,7 +135,7 @@
 
                         <div>
                             <dt class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Estado</dt>
-                            <dd class="mt-1 text-sm">{{ $event->status }}</dd>
+                            <dd class="mt-1 text-sm">{{ $event->statusLabel() }}</dd>
                         </div>
 
                         <div>

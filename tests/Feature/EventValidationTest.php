@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\EventStatus;
 use App\Models\Role;
 use App\Models\User;
 use Carbon\Carbon;
@@ -123,6 +124,22 @@ class EventValidationTest extends TestCase
             ->assertRedirect('/events/create');
     }
 
+    public function test_status_must_be_a_supported_enum_value_when_creating_an_event(): void
+    {
+        $user = $this->authenticatedUser();
+
+        $response = $this
+            ->actingAs($user)
+            ->from('/events/create')
+            ->post('/events', $this->validEventPayload([
+                'status' => 'programado',
+            ]));
+
+        $response
+            ->assertSessionHasErrors(['status'])
+            ->assertRedirect('/events/create');
+    }
+
     /**
      * @param array<string, mixed> $overrides
      * @return array<string, mixed>
@@ -135,7 +152,7 @@ class EventValidationTest extends TestCase
             'date' => '2026-05-20',
             'time' => '14:30',
             'location' => 'Auditorio principal',
-            'status' => 'programado',
+            'status' => EventStatus::OPEN->value,
             'capacity' => 120,
             'has_parking' => 1,
             'parking_slots' => 30,

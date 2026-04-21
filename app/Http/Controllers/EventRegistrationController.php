@@ -34,6 +34,12 @@ class EventRegistrationController extends Controller
                 ]);
             }
 
+            if (! $lockedEvent->acceptsRegistrations()) {
+                throw ValidationException::withMessages([
+                    'registration' => $lockedEvent->registrationRestrictionMessage(),
+                ]);
+            }
+
             if ($lockedEvent->time !== null && $lockedEvent->time->isPast()) {
                 throw ValidationException::withMessages([
                     'registration' => 'No puedes inscribirte en un evento que ya ocurrio.',

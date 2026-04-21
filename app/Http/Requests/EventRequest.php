@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\EventStatus;
 use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
@@ -25,7 +26,7 @@ class EventRequest extends FormRequest
             'date' => ['required', 'date'],
             'time' => ['required', 'date_format:H:i'],
             'location' => ['required', 'string', 'max:255'],
-            'status' => ['required', 'string', 'max:100'],
+            'status' => ['required', Rule::enum(EventStatus::class)],
             'capacity' => ['required', 'integer', 'min:1'],
             'has_parking' => ['nullable', 'boolean'],
             'parking_slots' => [

@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\EventStatus;
 use App\Models\Event;
 use App\Models\EventRegistration;
 use App\Models\Role;
@@ -45,7 +46,7 @@ function registrationEvent(array $overrides = []): Event
         'date' => Carbon::now()->addWeek()->toDateString(),
         'time' => Carbon::now()->addWeek()->setTime(10, 0, 0),
         'location' => 'Salon de pruebas',
-        'status' => 'programado',
+        'status' => EventStatus::OPEN->value,
         'capacity' => 2,
         'has_parking' => false,
         'parking_slots' => null,
@@ -204,4 +205,73 @@ test('regular users can not update registrations that are not theirs', function 
             'status' => EventRegistration::STATUS_CANCELLED,
         ])
         ->assertForbidden();
+});
+
+test('users can not register for cancelled events', function () {
+    seedRegistrationRoles();
+
+    $event = registrationEvent([
+        'status' => EventStatus::CANCELLED->value,
+    ]);
+    $user = User::factory()->create([
+        'role' => 'user',
+    ]);
+
+    $this->from(route('events.show', $event))
+        ->actingAs($user)
+        ->post(route('events.registrations.store', $event))
+        ->assertRedirect(route('events.show', $event, absolute: false))
+        ->assertSessionHasErrors([
+            'registration' => 'No puedes inscribirte porque el evento esta cancelado.',
+        ]);
+
+    expect(
+        EventRegistration::query()
+            ->where('event_id', $event->id)
+            ->where('user_id', $user->id)
+            ->exists()
+    )->toBeFalse();
+});
+
+test('users can not register for closed events', function () {
+    seedRegistrationRoles();
+
+    $event = registrationEvent([
+        'status' => EventStatus::CLOSED->value,
+    ]);
+    $user = User::factory()->create([
+        'role' => 'user',
+    ]);
+
+    $this->from(route('events.show', $event))
+        ->actingAs($user)
+        ->post(route('events.registrations.store', $event))
+        ->assertRedirect(route('events.show', $event, absolute: false))
+        ->assertSessionHasErrors([
+            'registration' => 'No puedes inscribirte porque el evento esta cerrado.',
+        ]);
+
+    expect(
+        EventRegistration::query()
+            ->where('event_id', $event->id)
+            ->where('user_id', $user->id)
+            ->exists()
+    )->toBeFalse();
+});
+
+test('event detail shows restriction message instead of the registration button when the event is closed', function () {
+    seedRegistrationRoles();
+
+    $event = registrationEvent([
+        'status' => EventStatus::CLOSED->value,
+    ]);
+    $user = User::factory()->create([
+        'role' => 'user',
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('events.show', $event))
+        ->assertOk()
+        ->assertSee('No puedes inscribirte porque el evento esta cerrado.')
+        ->assertDontSee('Inscribirme');
 });
