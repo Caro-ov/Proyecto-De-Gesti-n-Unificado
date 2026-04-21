@@ -20,6 +20,8 @@ Route::middleware(['auth', 'active.role'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::prefix('events')->name('events.')->group(function () {
+        Route::get('/mis-eventos', [EventController::class, 'mine'])
+            ->name('mine');
         Route::get('/', [EventController::class, 'index'])
             ->can('viewAny', Event::class)
             ->name('index');

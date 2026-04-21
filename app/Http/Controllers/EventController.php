@@ -21,6 +21,18 @@ class EventController extends Controller
         return view('events.index', compact('events'));
     }
 
+    public function mine(Request $request): View
+    {
+        $events = $request->user()
+            ->registeredEvents()
+            ->wherePivot('status', '!=', EventRegistration::STATUS_CANCELLED)
+            ->with(['user'])
+            ->orderByPivot('registered_at', 'desc')
+            ->get();
+
+        return view('events.mine', compact('events'));
+    }
+
     public function show(Request $request, Event $event): View
     {
         $event->loadMissing('user');

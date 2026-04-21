@@ -11,10 +11,17 @@
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <p class="mb-4">{{ __('Panel principal') }}</p>
 
+                    <a
+                        href="{{ route('events.mine') }}"
+                        class="inline-flex items-center rounded-md bg-gray-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-gray-700 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white"
+                    >
+                        Ver mis eventos
+                    </a>
+
                     @can('create', \App\Models\Event::class)
                         <a
                             href="{{ route('events.create') }}"
-                            class="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500"
+                            class="ms-3 inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500"
                         >
                             Crear evento
                         </a>
