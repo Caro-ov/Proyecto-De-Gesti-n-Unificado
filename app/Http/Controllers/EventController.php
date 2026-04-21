@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\EventRequest;
 use App\Models\Event;
+use App\Models\EventRegistration;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class EventController extends Controller
@@ -19,11 +21,41 @@ class EventController extends Controller
         return view('events.index', compact('events'));
     }
 
-    public function show(Event $event): View
+    public function show(Request $request, Event $event): View
     {
         $event->loadMissing('user');
+        $event->loadCount([
+            'registrations as confirmed_registrations_count' => fn ($query) => $query->whereIn('status', [
+                EventRegistration::STATUS_REGISTERED,
+                EventRegistration::STATUS_ATTENDED,
+            ]),
+            'registrations as waitlist_registrations_count' => fn ($query) => $query->where('status', EventRegistration::STATUS_WAITLIST),
+        ]);
 
-        return view('events.show', compact('event'));
+        $currentRegistration = $event->registrations()
+            ->where('user_id', $request->user()->id)
+            ->first();
+
+        if ($request->user()->can('viewAny', [EventRegistration::class, $event])) {
+            $event->load([
+                'registrations' => fn ($query) => $query
+                    ->with('user')
+                    ->orderByRaw("
+                        CASE status
+                            WHEN 'registered' THEN 1
+                            WHEN 'attended' THEN 2
+                            WHEN 'waitlist' THEN 3
+                            WHEN 'cancelled' THEN 4
+                            ELSE 5
+                        END
+                    ")
+                    ->orderBy('registered_at'),
+            ]);
+        }
+
+        $availableSlots = max(0, $event->capacity - $event->confirmed_registrations_count);
+
+        return view('events.show', compact('event', 'currentRegistration', 'availableSlots'));
     }
 
     public function create(): View
