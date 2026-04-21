@@ -67,13 +67,17 @@ class EventRegistrationController extends Controller
             ]);
         });
 
-        $message = $registration->status === EventRegistration::STATUS_WAITLIST
-            ? 'El evento alcanzo su cupo. Quedaste en lista de espera.'
-            : 'Te inscribiste correctamente en el evento.';
+        if ($registration->status === EventRegistration::STATUS_WAITLIST) {
+            return redirect()
+                ->route('events.show', $event)
+                ->withErrors([
+                    'registration' => 'El evento ya no tiene cupos disponibles. Tu inscripción quedó registrada en lista de espera y te avisaremos si se libera un lugar.',
+                ]);
+        }
 
         return redirect()
             ->route('events.show', $event)
-            ->with('status', $message);
+            ->with('status', 'Te inscribiste correctamente en el evento.');
     }
 
     public function update(Request $request, Event $event, EventRegistration $registration): RedirectResponse
