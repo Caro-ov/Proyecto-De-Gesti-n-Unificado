@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Auth\Capability;
 use App\Models\Event;
 use App\Models\User;
 
@@ -12,7 +13,7 @@ class EventPolicy
      */
     public function before(User $user, string $ability): ?bool
     {
-        if ($user->hasActiveRole('admin')) {
+        if ($user->hasCapability(Capability::SYSTEM_MANAGE_ALL)) {
             return true;
         }
 
@@ -24,7 +25,7 @@ class EventPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasActiveRole();
+        return $user->hasCapability(Capability::EVENTS_VIEW);
     }
 
     /**
@@ -32,7 +33,7 @@ class EventPolicy
      */
     public function view(User $user, Event $event): bool
     {
-        return $user->hasActiveRole();
+        return $user->hasCapability(Capability::EVENTS_VIEW);
     }
 
     /**
@@ -40,7 +41,7 @@ class EventPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasAnyActiveRole(['admin', 'coordinator']);
+        return $user->hasCapability(Capability::EVENTS_CREATE);
     }
 
     /**
@@ -48,7 +49,7 @@ class EventPolicy
      */
     public function update(User $user, Event $event): bool
     {
-        return $user->hasAnyActiveRole(['admin', 'coordinator']);
+        return $user->hasCapability(Capability::EVENTS_UPDATE);
     }
 
     /**

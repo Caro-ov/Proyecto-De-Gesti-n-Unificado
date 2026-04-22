@@ -1,237 +1,241 @@
+@php($routePrefix = request()->routeIs('admin.*') ? 'admin' : 'portal')
+
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            Detalle del evento
-        </h2>
+        <x-page-header
+            eyebrow="Eventos"
+            :title="$event->name"
+            description="Detalle operativo del evento, su capacidad y las inscripciones asociadas dentro del mismo patron del panel."
+            :breadcrumbs="[
+                ['label' => $routePrefix === 'admin' ? 'Admin' : 'Portal', 'href' => route($routePrefix.'.dashboard')],
+                ['label' => 'Eventos', 'href' => route($routePrefix.'.events.index')],
+                ['label' => $event->name, 'current' => true],
+            ]"
+        >
+            <x-slot name="actions">
+                <a href="{{ url()->previous() }}" class="app-link-muted">
+                    Volver
+                </a>
+
+                @if ($routePrefix === 'admin' && auth()->user()->can('update', $event))
+                    <a href="{{ route('admin.events.edit', $event) }}" class="app-link">
+                        Editar evento
+                    </a>
+                @endif
+            </x-slot>
+        </x-page-header>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-5xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100">
-                    @if (session('status'))
-                        <div class="mb-6 rounded-md bg-green-100 px-4 py-3 text-sm text-green-800 dark:bg-green-950/40 dark:text-green-100">
-                            {{ session('status') }}
-                        </div>
-                    @endif
+    <div class="mx-auto max-w-6xl space-y-6">
+        @if (session('status'))
+            <div class="app-alert-success">
+                {{ session('status') }}
+            </div>
+        @endif
 
-                    @if ($errors->has('registration') || $errors->has('status'))
-                        <div class="mb-6 rounded-md bg-red-100 px-4 py-3 text-sm text-red-800 dark:bg-red-950/40 dark:text-red-100">
-                            {{ $errors->first('registration') ?: $errors->first('status') }}
-                        </div>
-                    @endif
+        @if ($errors->has('registration') || $errors->has('status'))
+            <div class="app-alert-danger">
+                {{ $errors->first('registration') ?: $errors->first('status') }}
+            </div>
+        @endif
 
-                    <div class="mb-6 flex items-center justify-between gap-4">
-                        <h3 class="text-2xl font-semibold">{{ $event->name }}</h3>
-                        <a href="{{ url()->previous() }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300">
-                            Volver
-                        </a>
-                    </div>
-
-                    <div class="mb-6 grid gap-4 md:grid-cols-3">
-                        <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
-                            <p class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Inscritos</p>
-                            <p class="mt-2 text-2xl font-semibold">{{ $event->confirmed_registrations_count }}</p>
-                        </div>
-                        <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
-                            <p class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Lista de espera</p>
-                            <p class="mt-2 text-2xl font-semibold">{{ $event->waitlist_registrations_count }}</p>
-                        </div>
-                        <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
-                            <p class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Cupos disponibles</p>
-                            <p class="mt-2 text-2xl font-semibold">{{ $availableSlots }}</p>
-                        </div>
-                    </div>
-
-                    @php($registrationRestrictionMessage = $event->registrationRestrictionMessage())
-
-                    @if ($currentRegistration)
-                        <div class="mb-6 rounded-lg border border-indigo-200 bg-indigo-50 p-4 text-indigo-900 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-100">
-                            <p class="text-sm font-semibold">Tu estado de inscripcion</p>
-                            <p class="mt-2 text-sm text-indigo-800 dark:text-indigo-100">{{ $currentRegistration->statusLabel() }}</p>
-
-                            @if ($currentRegistration->status !== \App\Models\EventRegistration::STATUS_CANCELLED)
-                                <form method="POST" action="{{ route('events.registrations.destroy', [$event, $currentRegistration]) }}" class="mt-4">
-                                    @csrf
-                                    @method('DELETE')
-
-                                    <button
-                                        type="submit"
-                                        class="inline-flex items-center rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-red-500"
-                                    >
-                                        Cancelar inscripcion
-                                    </button>
-                                </form>
-                            @elseif ($registrationRestrictionMessage)
-                                <p class="mt-4 text-sm text-amber-800 dark:text-amber-200">
-                                    {{ $registrationRestrictionMessage }}
-                                </p>
-                            @elseif (auth()->user()->can('create', [\App\Models\EventRegistration::class, $event]))
-                                <form method="POST" action="{{ route('events.registrations.store', $event) }}" class="mt-4">
-                                    @csrf
-
-                                    <button
-                                        type="submit"
-                                        class="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500"
-                                    >
-                                        Volver a inscribirme
-                                    </button>
-                                </form>
-                            @endif
-                        </div>
-                    @elseif (auth()->user()->can('create', [\App\Models\EventRegistration::class, $event]))
-                        <div class="mb-6 rounded-lg border border-indigo-200 bg-indigo-50 p-4 text-indigo-900 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-100">
-                            @if ($registrationRestrictionMessage)
-                                <p class="text-sm text-amber-800 dark:text-amber-200">{{ $registrationRestrictionMessage }}</p>
-                            @else
-                                <p class="text-sm text-indigo-800 dark:text-indigo-100">Aun no tienes una inscripcion para este evento.</p>
-                            @endif
-
-                            @if (! $registrationRestrictionMessage)
-                                <form method="POST" action="{{ route('events.registrations.store', $event) }}" class="mt-4">
-                                    @csrf
-
-                                    <button
-                                        type="submit"
-                                        class="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500"
-                                    >
-                                        Inscribirme
-                                    </button>
-                                </form>
-                            @endif
-                        </div>
-                    @endif
-
-                    <dl class="grid gap-4 sm:grid-cols-2">
-                        <div>
-                            <dt class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">ID</dt>
-                            <dd class="mt-1 text-sm">{{ $event->id }}</dd>
-                        </div>
-
-                        <div>
-                            <dt class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Nombre</dt>
-                            <dd class="mt-1 text-sm">{{ $event->name }}</dd>
-                        </div>
-
-                        <div>
-                            <dt class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Descripcion</dt>
-                            <dd class="mt-1 text-sm">{{ $event->description ?: 'Sin descripcion' }}</dd>
-                        </div>
-
-                        <div>
-                            <dt class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Fecha</dt>
-                            <dd class="mt-1 text-sm">{{ optional($event->date)->format('d/m/Y') }}</dd>
-                        </div>
-
-                        <div>
-                            <dt class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Hora</dt>
-                            <dd class="mt-1 text-sm">{{ optional($event->time)->format('H:i') }}</dd>
-                        </div>
-
-                        <div>
-                            <dt class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Ubicacion</dt>
-                            <dd class="mt-1 text-sm">{{ $event->location }}</dd>
-                        </div>
-
-                        <div>
-                            <dt class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Estado</dt>
-                            <dd class="mt-1 text-sm">{{ $event->statusLabel() }}</dd>
-                        </div>
-
-                        <div>
-                            <dt class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Capacidad</dt>
-                            <dd class="mt-1 text-sm">{{ $event->capacity }}</dd>
-                        </div>
-
-                        <div>
-                            <dt class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Tiene parqueadero</dt>
-                            <dd class="mt-1 text-sm">{{ $event->has_parking ? 'Si' : 'No' }}</dd>
-                        </div>
-
-                        <div>
-                            <dt class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Cupos de parqueadero</dt>
-                            <dd class="mt-1 text-sm">
-                                @if ($event->has_parking)
-                                    {{ $event->parking_slots ?? 0 }}
-                                @else
-                                    No aplica
-                                @endif
-                            </dd>
-                        </div>
-
-                        <div>
-                            <dt class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Usuario creador</dt>
-                            <dd class="mt-1 text-sm">{{ $event->user?->name ?? 'No asignado' }}</dd>
-                        </div>
-                    </dl>
+        <x-panel>
+            <div class="grid gap-4 md:grid-cols-3">
+                <div class="app-panel-muted">
+                    <p class="text-xs font-semibold uppercase tracking-widest text-slate-400">Inscritos</p>
+                    <p class="mt-3 text-3xl font-semibold tracking-tight text-slate-900">{{ $event->confirmed_registrations_count }}</p>
+                </div>
+                <div class="app-panel-muted">
+                    <p class="text-xs font-semibold uppercase tracking-widest text-slate-400">Lista de espera</p>
+                    <p class="mt-3 text-3xl font-semibold tracking-tight text-slate-900">{{ $event->waitlist_registrations_count }}</p>
+                </div>
+                <div class="app-panel-muted">
+                    <p class="text-xs font-semibold uppercase tracking-widest text-slate-400">Cupos disponibles</p>
+                    <p class="mt-3 text-3xl font-semibold tracking-tight text-slate-900">{{ $availableSlots }}</p>
                 </div>
             </div>
 
-            @can('viewAny', [\App\Models\EventRegistration::class, $event])
-                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6 text-gray-900 dark:text-gray-100">
-                        <h4 class="mb-4 text-lg font-semibold">Inscripciones</h4>
+            @php($registrationRestrictionMessage = $event->registrationRestrictionMessage())
 
-                        @if ($event->registrations->isEmpty())
-                            <p class="text-sm text-gray-600 dark:text-gray-300">
-                                Este evento aun no tiene inscripciones.
-                            </p>
-                        @else
-                            <div class="space-y-4">
-                                @foreach ($event->registrations as $registration)
-                                    <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
-                                        <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                                            <div>
-                                                <p class="font-semibold">{{ $registration->user?->name ?? 'Usuario no disponible' }}</p>
-                                                <p class="text-sm text-gray-600 dark:text-gray-300">{{ $registration->user?->email }}</p>
-                                                <p class="mt-2 text-sm">Estado actual: {{ $registration->statusLabel() }}</p>
-                                                <p class="text-sm text-gray-600 dark:text-gray-300">
-                                                    Fecha de registro:
-                                                    {{ optional($registration->registered_at)->format('d/m/Y H:i') ?: 'Sin fecha' }}
-                                                </p>
-                                            </div>
+            @if ($currentRegistration)
+                <div class="app-alert-info mt-6">
+                    <p class="font-semibold">Tu estado de inscripcion</p>
+                    <p class="mt-2">{{ $currentRegistration->statusLabel() }}</p>
 
-                                            <form method="POST" action="{{ route('events.registrations.update', [$event, $registration]) }}" class="grid gap-3 lg:min-w-96">
-                                                @csrf
-                                                @method('PATCH')
+                    @if ($currentRegistration->status !== \App\Models\EventRegistration::STATUS_CANCELLED)
+                        <form method="POST" action="{{ route($routePrefix.'.events.registrations.destroy', [$event, $currentRegistration]) }}" class="mt-4">
+                            @csrf
+                            @method('DELETE')
 
-                                                <div>
-                                                    <x-input-label :for="'status_'.$registration->id" value="Estado" />
-                                                    <select
-                                                        id="{{ 'status_'.$registration->id }}"
-                                                        name="status"
-                                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
-                                                    >
-                                                        @foreach (\App\Models\EventRegistration::statuses() as $status)
-                                                            <option value="{{ $status }}" @selected($registration->status === $status)>
-                                                                {{ \App\Models\EventRegistration::labelFor($status) }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                </div>
+                            <x-danger-button>Cancelar inscripcion</x-danger-button>
+                        </form>
+                    @elseif ($registrationRestrictionMessage)
+                        <p class="mt-4 text-sm text-amber-700">
+                            {{ $registrationRestrictionMessage }}
+                        </p>
+                    @elseif (auth()->user()->can('create', [\App\Models\EventRegistration::class, $event]))
+                        <form method="POST" action="{{ route($routePrefix.'.events.registrations.store', $event) }}" class="mt-4">
+                            @csrf
 
-                                                <div>
-                                                    <x-input-label :for="'notes_'.$registration->id" value="Notas" />
-                                                    <textarea
-                                                        id="{{ 'notes_'.$registration->id }}"
-                                                        name="notes"
-                                                        rows="2"
-                                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
-                                                    >{{ $registration->notes }}</textarea>
-                                                </div>
-
-                                                <div class="flex justify-end">
-                                                    <x-primary-button>Actualizar inscripcion</x-primary-button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        @endif
-                    </div>
+                            <x-primary-button>Volver a inscribirme</x-primary-button>
+                        </form>
+                    @endif
                 </div>
-            @endcan
-        </div>
+            @elseif (auth()->user()->can('create', [\App\Models\EventRegistration::class, $event]))
+                <div class="app-alert-info mt-6">
+                    @if ($registrationRestrictionMessage)
+                        <p>{{ $registrationRestrictionMessage }}</p>
+                    @else
+                        <p>Aun no tienes una inscripcion para este evento.</p>
+                    @endif
+
+                    @if (! $registrationRestrictionMessage)
+                        <form method="POST" action="{{ route($routePrefix.'.events.registrations.store', $event) }}" class="mt-4">
+                            @csrf
+
+                            <x-primary-button>Inscribirme</x-primary-button>
+                        </form>
+                    @endif
+                </div>
+            @endif
+
+            <div class="mt-8">
+                <p class="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">
+                    Informacion general
+                </p>
+                <h2 class="mt-2 text-xl font-semibold text-slate-900">
+                    Ficha del evento
+                </h2>
+            </div>
+
+            <dl class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                <div class="app-panel-muted">
+                    <dt class="text-xs font-semibold uppercase tracking-widest text-slate-400">ID</dt>
+                    <dd class="mt-2 text-sm font-medium text-slate-900">{{ $event->id }}</dd>
+                </div>
+                <div class="app-panel-muted">
+                    <dt class="text-xs font-semibold uppercase tracking-widest text-slate-400">Nombre</dt>
+                    <dd class="mt-2 text-sm font-medium text-slate-900">{{ $event->name }}</dd>
+                </div>
+                <div class="app-panel-muted">
+                    <dt class="text-xs font-semibold uppercase tracking-widest text-slate-400">Estado</dt>
+                    <dd class="mt-2 text-sm font-medium text-slate-900">{{ $event->statusLabel() }}</dd>
+                </div>
+                <div class="app-panel-muted sm:col-span-2 xl:col-span-3">
+                    <dt class="text-xs font-semibold uppercase tracking-widest text-slate-400">Descripcion</dt>
+                    <dd class="mt-2 text-sm font-medium text-slate-900">{{ $event->description ?: 'Sin descripcion' }}</dd>
+                </div>
+                <div class="app-panel-muted">
+                    <dt class="text-xs font-semibold uppercase tracking-widest text-slate-400">Fecha</dt>
+                    <dd class="mt-2 text-sm font-medium text-slate-900">{{ optional($event->date)->format('d/m/Y') }}</dd>
+                </div>
+                <div class="app-panel-muted">
+                    <dt class="text-xs font-semibold uppercase tracking-widest text-slate-400">Hora</dt>
+                    <dd class="mt-2 text-sm font-medium text-slate-900">{{ optional($event->time)->format('H:i') }}</dd>
+                </div>
+                <div class="app-panel-muted">
+                    <dt class="text-xs font-semibold uppercase tracking-widest text-slate-400">Ubicacion</dt>
+                    <dd class="mt-2 text-sm font-medium text-slate-900">{{ $event->location }}</dd>
+                </div>
+                <div class="app-panel-muted">
+                    <dt class="text-xs font-semibold uppercase tracking-widest text-slate-400">Capacidad</dt>
+                    <dd class="mt-2 text-sm font-medium text-slate-900">{{ $event->capacity }}</dd>
+                </div>
+                <div class="app-panel-muted">
+                    <dt class="text-xs font-semibold uppercase tracking-widest text-slate-400">Tiene parqueadero</dt>
+                    <dd class="mt-2 text-sm font-medium text-slate-900">{{ $event->has_parking ? 'Si' : 'No' }}</dd>
+                </div>
+                <div class="app-panel-muted">
+                    <dt class="text-xs font-semibold uppercase tracking-widest text-slate-400">Cupos de parqueadero</dt>
+                    <dd class="mt-2 text-sm font-medium text-slate-900">
+                        @if ($event->has_parking)
+                            {{ $event->parking_slots ?? 0 }}
+                        @else
+                            No aplica
+                        @endif
+                    </dd>
+                </div>
+                <div class="app-panel-muted">
+                    <dt class="text-xs font-semibold uppercase tracking-widest text-slate-400">Usuario creador</dt>
+                    <dd class="mt-2 text-sm font-medium text-slate-900">{{ $event->user?->name ?? 'No asignado' }}</dd>
+                </div>
+            </dl>
+        </x-panel>
+
+        @can('viewAny', [\App\Models\EventRegistration::class, $event])
+            <x-panel>
+                <div class="mb-6">
+                    <p class="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">
+                        Inscripciones
+                    </p>
+                    <h2 class="mt-2 text-xl font-semibold text-slate-900">
+                        Gestion de asistentes
+                    </h2>
+                    <p class="mt-2 text-sm leading-6 text-slate-500">
+                        Administra el estado y las notas de cada inscripcion sin salir del detalle del evento.
+                    </p>
+                </div>
+
+                @if ($event->registrations->isEmpty())
+                    <div class="rounded-3xl border border-dashed border-slate-300 px-6 py-10 text-center">
+                        <p class="text-sm font-medium text-slate-600">
+                            Este evento aun no tiene inscripciones.
+                        </p>
+                    </div>
+                @else
+                    <div class="space-y-4">
+                        @foreach ($event->registrations as $registration)
+                            <div class="app-panel-muted">
+                                <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+                                    <div class="lg:max-w-md">
+                                        <p class="text-lg font-semibold text-slate-900">
+                                            {{ $registration->user?->name ?? 'Usuario no disponible' }}
+                                        </p>
+                                        <p class="mt-1 text-sm text-slate-500">{{ $registration->user?->email }}</p>
+                                        <p class="mt-4 text-sm text-slate-600">
+                                            Estado actual: <span class="font-semibold text-slate-900">{{ $registration->statusLabel() }}</span>
+                                        </p>
+                                        <p class="mt-1 text-sm text-slate-500">
+                                            Fecha de registro:
+                                            {{ optional($registration->registered_at)->format('d/m/Y H:i') ?: 'Sin fecha' }}
+                                        </p>
+                                    </div>
+
+                                    <form method="POST" action="{{ route($routePrefix.'.events.registrations.update', [$event, $registration]) }}" class="grid gap-4 lg:min-w-[24rem]">
+                                        @csrf
+                                        @method('PATCH')
+
+                                        <div>
+                                            <x-input-label :for="'status_'.$registration->id" value="Estado" />
+                                            <select id="{{ 'status_'.$registration->id }}" name="status" class="app-select">
+                                                @foreach (\App\Models\EventRegistration::statuses() as $status)
+                                                    <option value="{{ $status }}" @selected($registration->status === $status)>
+                                                        {{ \App\Models\EventRegistration::labelFor($status) }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <x-input-label :for="'notes_'.$registration->id" value="Notas" />
+                                            <textarea
+                                                id="{{ 'notes_'.$registration->id }}"
+                                                name="notes"
+                                                rows="3"
+                                                class="app-textarea"
+                                            >{{ $registration->notes }}</textarea>
+                                        </div>
+
+                                        <div class="flex justify-end">
+                                            <x-primary-button>Actualizar inscripcion</x-primary-button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+            </x-panel>
+        @endcan
     </div>
 </x-app-layout>

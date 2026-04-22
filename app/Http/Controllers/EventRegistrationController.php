@@ -73,16 +73,18 @@ class EventRegistrationController extends Controller
             ]);
         });
 
+        $showRouteName = $this->resolveShowRouteName($request);
+
         if ($registration->status === EventRegistration::STATUS_WAITLIST) {
             return redirect()
-                ->route('events.show', $event)
+                ->route($showRouteName, $event)
                 ->withErrors([
-                    'registration' => 'El evento ya no tiene cupos disponibles. Tu inscripción quedó registrada en lista de espera y te avisaremos si se libera un lugar.',
+                    'registration' => 'El evento ya no tiene cupos disponibles. Tu inscripcion quedo registrada en lista de espera y te avisaremos si se libera un lugar.',
                 ]);
         }
 
         return redirect()
-            ->route('events.show', $event)
+            ->route($showRouteName, $event)
             ->with('status', 'Te inscribiste correctamente en el evento.');
     }
 
@@ -145,11 +147,11 @@ class EventRegistrationController extends Controller
         });
 
         return redirect()
-            ->route('events.show', $event)
+            ->route($this->resolveShowRouteName($request), $event)
             ->with('status', 'La inscripcion fue actualizada correctamente.');
     }
 
-    public function destroy(Event $event, EventRegistration $registration): RedirectResponse
+    public function destroy(Request $request, Event $event, EventRegistration $registration): RedirectResponse
     {
         $this->ensureRegistrationBelongsToEvent($event, $registration);
         $this->authorize('delete', $registration);
@@ -173,7 +175,7 @@ class EventRegistrationController extends Controller
         });
 
         return redirect()
-            ->route('events.show', $event)
+            ->route($this->resolveShowRouteName($request), $event)
             ->with('status', 'La inscripcion fue cancelada correctamente.');
     }
 
@@ -205,5 +207,12 @@ class EventRegistrationController extends Controller
     private function ensureRegistrationBelongsToEvent(Event $event, EventRegistration $registration): void
     {
         abort_unless($registration->event_id === $event->id, 404);
+    }
+
+    private function resolveShowRouteName(Request $request): string
+    {
+        return $request->routeIs('admin.*')
+            ? 'admin.events.show'
+            : 'portal.events.show';
     }
 }

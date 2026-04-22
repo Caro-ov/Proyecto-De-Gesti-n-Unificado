@@ -63,9 +63,9 @@ test('users can register for an event', function () {
     ]);
 
     $response = $this->actingAs($user)
-        ->post(route('events.registrations.store', $event));
+        ->post(route('portal.events.registrations.store', $event));
 
-    $response->assertRedirect(route('events.show', $event, absolute: false));
+    $response->assertRedirect(route('portal.events.show', $event, absolute: false));
 
     $registration = EventRegistration::query()
         ->where('event_id', $event->id)
@@ -99,10 +99,10 @@ test('users are added to the waitlist when the event has no remaining capacity',
     ]);
 
     $this->actingAs($waitlistedUser)
-        ->post(route('events.registrations.store', $event))
-        ->assertRedirect(route('events.show', $event, absolute: false))
+        ->post(route('portal.events.registrations.store', $event))
+        ->assertRedirect(route('portal.events.show', $event, absolute: false))
         ->assertSessionHasErrors([
-            'registration' => 'El evento ya no tiene cupos disponibles. Tu inscripción quedó registrada en lista de espera y te avisaremos si se libera un lugar.',
+            'registration' => 'El evento ya no tiene cupos disponibles. Tu inscripcion quedo registrada en lista de espera y te avisaremos si se libera un lugar.',
         ]);
 
     expect(
@@ -143,8 +143,8 @@ test('cancelling a confirmed registration promotes the first waitlisted user', f
     ]);
 
     $this->actingAs($registeredUser)
-        ->delete(route('events.registrations.destroy', [$event, $registered]))
-        ->assertRedirect(route('events.show', $event, absolute: false));
+        ->delete(route('portal.events.registrations.destroy', [$event, $registered]))
+        ->assertRedirect(route('portal.events.show', $event, absolute: false));
 
     expect($registered->fresh()->status)->toBe(EventRegistration::STATUS_CANCELLED);
     expect($waitlisted->fresh()->status)->toBe(EventRegistration::STATUS_REGISTERED);
@@ -169,11 +169,11 @@ test('coordinators can update the status of an event registration', function () 
     ]);
 
     $this->actingAs($coordinator)
-        ->patch(route('events.registrations.update', [$event, $registration]), [
+        ->patch(route('admin.events.registrations.update', [$event, $registration]), [
             'status' => EventRegistration::STATUS_ATTENDED,
             'notes' => 'Ingreso confirmado en puerta',
         ])
-        ->assertRedirect(route('events.show', $event, absolute: false));
+        ->assertRedirect(route('admin.events.show', $event, absolute: false));
 
     $registration->refresh();
 
@@ -201,7 +201,7 @@ test('regular users can not update registrations that are not theirs', function 
     ]);
 
     $this->actingAs($otherUser)
-        ->patch(route('events.registrations.update', [$event, $registration]), [
+        ->patch(route('portal.events.registrations.update', [$event, $registration]), [
             'status' => EventRegistration::STATUS_CANCELLED,
         ])
         ->assertForbidden();
@@ -217,10 +217,10 @@ test('users can not register for cancelled events', function () {
         'role' => 'user',
     ]);
 
-    $this->from(route('events.show', $event))
+    $this->from(route('portal.events.show', $event))
         ->actingAs($user)
-        ->post(route('events.registrations.store', $event))
-        ->assertRedirect(route('events.show', $event, absolute: false))
+        ->post(route('portal.events.registrations.store', $event))
+        ->assertRedirect(route('portal.events.show', $event, absolute: false))
         ->assertSessionHasErrors([
             'registration' => 'No puedes inscribirte porque el evento esta cancelado.',
         ]);
@@ -243,10 +243,10 @@ test('users can not register for closed events', function () {
         'role' => 'user',
     ]);
 
-    $this->from(route('events.show', $event))
+    $this->from(route('portal.events.show', $event))
         ->actingAs($user)
-        ->post(route('events.registrations.store', $event))
-        ->assertRedirect(route('events.show', $event, absolute: false))
+        ->post(route('portal.events.registrations.store', $event))
+        ->assertRedirect(route('portal.events.show', $event, absolute: false))
         ->assertSessionHasErrors([
             'registration' => 'No puedes inscribirte porque el evento esta cerrado.',
         ]);
@@ -270,8 +270,48 @@ test('event detail shows restriction message instead of the registration button 
     ]);
 
     $this->actingAs($user)
-        ->get(route('events.show', $event))
+        ->get(route('portal.events.show', $event))
         ->assertOk()
         ->assertSee('No puedes inscribirte porque el evento esta cerrado.')
         ->assertDontSee('Inscribirme');
+});
+
+test('administrators can see the registration button for open events in the admin area', function () {
+    seedRegistrationRoles();
+
+    $event = registrationEvent([
+        'status' => EventStatus::OPEN->value,
+    ]);
+    $admin = User::factory()->create([
+        'role' => 'admin',
+    ]);
+
+    $this->actingAs($admin)
+        ->get(route('admin.events.show', $event))
+        ->assertOk()
+        ->assertSee('Inscribirme')
+        ->assertDontSee('Las inscripciones solo estan disponibles para eventos activos o abiertos.');
+});
+
+test('coordinators can register for active events from the admin area', function () {
+    seedRegistrationRoles();
+
+    $event = registrationEvent([
+        'status' => EventStatus::ACTIVE->value,
+    ]);
+    $coordinator = User::factory()->create([
+        'role' => 'coordinator',
+    ]);
+
+    $this->actingAs($coordinator)
+        ->post(route('admin.events.registrations.store', $event))
+        ->assertRedirect(route('admin.events.show', $event, absolute: false))
+        ->assertSessionHasNoErrors();
+
+    expect(
+        EventRegistration::query()
+            ->where('event_id', $event->id)
+            ->where('user_id', $coordinator->id)
+            ->value('status')
+    )->toBe(EventRegistration::STATUS_REGISTERED);
 });

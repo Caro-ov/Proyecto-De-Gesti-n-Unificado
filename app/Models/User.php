@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Auth\Capability;
+use App\Auth\RoleCapabilities;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -85,6 +87,26 @@ class User extends Authenticatable
             ->where('status', true)
             ->whereIn('name', $roles)
             ->exists();
+    }
+
+    /**
+     * Determine whether the user has the given capability through an active role.
+     */
+    public function hasCapability(Capability|string $capability): bool
+    {
+        if (! $this->hasActiveRole()) {
+            return false;
+        }
+
+        return RoleCapabilities::has($this->role, $capability);
+    }
+
+    /**
+     * Determine whether the user can access the administrative area.
+     */
+    public function canAccessBackoffice(): bool
+    {
+        return $this->hasCapability(Capability::BACKOFFICE_ACCESS);
     }
 
     /**

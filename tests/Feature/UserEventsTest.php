@@ -100,7 +100,7 @@ test('users can see only their registered events', function () {
     ]);
 
     $response = $this->actingAs($user)
-        ->get(route('events.mine'));
+        ->get(route('portal.events.mine'));
 
     $response->assertOk();
     $response->assertSeeText('Evento asociado 1');

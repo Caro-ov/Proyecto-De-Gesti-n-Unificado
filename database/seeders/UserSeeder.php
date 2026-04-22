@@ -33,6 +33,30 @@ class UserSeeder extends Seeder
                 'status' => true,
             ],
             [
+                'name' => 'Usuario Secundario',
+                'email' => 'usuario2@example.com',
+                'role' => 'user',
+                'status' => true,
+            ],
+            [
+                'name' => 'Usuario Lista Espera',
+                'email' => 'listaespera@example.com',
+                'role' => 'user',
+                'status' => true,
+            ],
+            [
+                'name' => 'Usuario Cancelado',
+                'email' => 'cancelado@example.com',
+                'role' => 'user',
+                'status' => true,
+            ],
+            [
+                'name' => 'Usuario Historico',
+                'email' => 'historico@example.com',
+                'role' => 'user',
+                'status' => true,
+            ],
+            [
                 'name' => 'Usuario Inactivo',
                 'email' => 'inactivo@example.com',
                 'role' => 'user',
