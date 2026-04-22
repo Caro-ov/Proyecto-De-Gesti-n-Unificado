@@ -14,7 +14,7 @@ class EventController extends Controller
     public function index(): View
     {
         $events = Event::query()
-            ->select(['id', 'name', 'date', 'capacity'])
+            ->select(['id', 'name', 'date', 'status', 'capacity'])
             ->latest('date')
             ->get();
 
@@ -88,7 +88,7 @@ class EventController extends Controller
         Event::create($validated);
 
         return redirect()
-            ->route('events.create')
+            ->route('admin.events.create')
             ->with('status', 'Evento creado correctamente.');
     }
 
@@ -99,7 +99,7 @@ class EventController extends Controller
         $event->update($validated);
 
         return redirect()
-            ->route('events.index')
+            ->route('admin.events.index')
             ->with('status', 'Evento actualizado correctamente.');
     }
 
@@ -108,7 +108,7 @@ class EventController extends Controller
         $event->delete();
 
         return redirect()
-            ->route('events.index')
+            ->route('admin.events.index')
             ->with('status', 'Evento eliminado correctamente.');
     }
 

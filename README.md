@@ -1,77 +1,277 @@
-# Proyecto-De-Gesti-n-Unificado
+# Proyecto de Gestion Unificado
 
-Es un proyecto de gestión en el cual estaremos realizando el login principalmente 
+Aplicacion web desarrollada con Laravel para administrar eventos, usuarios e inscripciones desde una experiencia separada por contexto:
 
-## Stack de tecnologia
+- `admin`: backoffice para gestion operativa
+- `portal`: autoservicio para usuarios autenticados
 
-### Backend
-- Laravel 13 
-https://laravel.com/docs/13.x/installation
+El proyecto esta construido sobre Blade, Alpine.js y Tailwind CSS, con autenticacion basada en Laravel Breeze y una capa de autorizacion centralizada por capacidades.
 
-### FrontEnd 
-- Blade 
-https://laravel.com/docs/13.x/frontend#php-and-blade
+## Caracteristicas principales
 
-### BD
-- MySql
-https://www.mysql.com/downloads/
-## ¡ES EL COMMUNITY OJO!
+- Dashboard administrativo con metricas de usuarios, eventos e inscripciones
+- Portal de usuario con resumen de inscripciones y proximos eventos
+- CRUD de eventos en el area administrativa
+- Inscripciones, cancelaciones y lista de espera
+- Navegacion separada entre `admin` y `portal`
+- Layout Blade reutilizable con sidebar, topbar y breadcrumbs
+- Autorizacion por capacidades centralizadas
 
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+## Stack tecnico
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+- PHP 8.3+
+- Laravel 13
+- Blade
+- Alpine.js
+- Tailwind CSS
+- Vite
+- MySQL
+- Pest
 
-## About Laravel
+## Arquitectura funcional
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### Areas de la aplicacion
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+#### Admin
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Espacio orientado a gestion interna.
 
-## Learning Laravel
+Rutas principales:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- `/admin/dashboard`
+- `/admin/events`
+- `/admin/events/create`
+- `/admin/events/{event}`
+- `/admin/events/{event}/edit`
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+#### Portal
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+Espacio orientado al usuario final.
 
-## Agentic Development
+Rutas principales:
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+- `/portal/dashboard`
+- `/portal/profile`
+- `/portal/events`
+- `/portal/events/mis-eventos`
+- `/portal/events/{event}`
+
+### Regla de separacion
+
+- Todo lo que sea gestion interna debe vivir en `admin.*`
+- Todo lo que sea autoservicio o accion personal debe vivir en `portal.*`
+
+## Roles y autorizacion
+
+El sistema usa roles persistidos en base de datos y capacidades definidas en codigo.
+
+Roles base:
+
+- `admin`
+- `coordinator`
+- `user`
+
+La fuente de verdad de permisos vive en:
+
+- [app/Auth/Capability.php](app/Auth/Capability.php)
+- [app/Auth/RoleCapabilities.php](app/Auth/RoleCapabilities.php)
+
+Ejemplo de enfoque:
+
+- `admin` accede a backoffice y tiene control total sobre eventos
+- `coordinator` accede a backoffice y gestiona eventos e inscripciones
+- `user` navega el portal y gestiona sus propias inscripciones
+
+Las policies y middleware consumen capacidades a traves de `User::hasCapability()` y `User::canAccessBackoffice()`.
+
+## Modulo de eventos
+
+El proyecto gira alrededor de `Event` y `EventRegistration`.
+
+Estados canonicos del evento:
+
+- `activo`
+- `abierto`
+- `cerrado`
+- `cancelado`
+
+Notas relevantes:
+
+- Los estados legacy se normalizan con `App\Enums\EventStatus`
+- Solo eventos `activo` y `abierto` aceptan inscripciones
+- Si no hay cupos disponibles, la inscripcion entra en `waitlist`
+- Las cancelaciones pueden promover automaticamente al primer usuario en lista de espera
+
+## Estandar de interfaz
+
+Las vistas autenticadas siguen un patron comun:
+
+- `x-app-layout`
+- sidebar y topbar reutilizables
+- `x-page-header`
+- `x-breadcrumbs`
+- `x-panel`
+
+Esto evita que cada modulo tenga una navegacion o presentacion distinta.
+
+## Requisitos
+
+- PHP 8.3 o superior
+- Composer
+- Node.js 20+ recomendado
+- npm
+- MySQL
+
+## Instalacion
+
+1. Clonar el repositorio
+2. Instalar dependencias
+3. Configurar entorno
+4. Ejecutar migraciones
+5. Compilar frontend
+
+Comando rapido:
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+composer run setup
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Este script ejecuta:
 
-## Contributing
+- `composer install`
+- copia de `.env` si no existe
+- `php artisan key:generate`
+- `php artisan migrate --force`
+- `npm install --ignore-scripts`
+- `npm run build`
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Configuracion local
 
-## Code of Conduct
+El proyecto usa MySQL por defecto.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Variables relevantes en `.env`:
 
-## Security Vulnerabilities
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=gestion-app
+DB_USERNAME=root
+DB_PASSWORD=root
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Ejecucion en desarrollo
 
-## License
+```bash
+composer run dev
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Este comando levanta en paralelo:
+
+- servidor Laravel
+- listener de cola
+- Vite en modo desarrollo
+
+Tambien puedes ejecutar servicios por separado si lo prefieres.
+
+## Seeds y accesos iniciales
+
+Seeder principal:
+
+```bash
+php artisan db:seed
+```
+
+Usuarios de referencia creados por `UserSeeder`:
+
+| Rol | Email | Password | Estado |
+|---|---|---|---|
+| Admin | `admin@example.com` | `password` | Activo |
+| Coordinator | `coordinacion@example.com` | `password` | Activo |
+| User | `usuario@example.com` | `password` | Activo |
+| User | `inactivo@example.com` | `password` | Inactivo |
+
+## Pruebas
+
+Suite completa:
+
+```bash
+composer test
+```
+
+Ejecucion directa:
+
+```bash
+php artisan test
+```
+
+Pruebas utiles por modulo:
+
+```bash
+php artisan test --filter=DashboardTest
+php artisan test --filter=ProfileTest
+php artisan test --filter=EventAuthorizationTest
+php artisan test --filter=EventRegistrationTest
+php artisan test --filter=EventValidationTest
+php artisan test --filter=UserEventsTest
+php artisan test --filter=CapabilityAuthorizationTest
+```
+
+Nota: en este entorno puede aparecer una advertencia de Pest al intentar escribir cache en `vendor/pestphp/pest/.temp/test-results`. Si los tests pasan, esa advertencia no invalida el resultado.
+
+## Estructura relevante
+
+```text
+app/
+  Auth/                   # Capacidades y mapa de permisos por rol
+  Http/
+    Controllers/          # Dashboards, eventos, perfil e inscripciones
+    Middleware/           # Restricciones por rol activo y acceso backoffice
+    Requests/             # Validaciones de formularios
+  Models/                 # User, Role, Event, EventRegistration
+  Policies/               # Reglas de autorizacion por recurso
+database/
+  migrations/             # Esquema de base de datos
+  seeders/                # Roles, usuarios, eventos e inscripciones
+resources/
+  views/
+    components/           # Componentes Blade reutilizables
+    layouts/              # Shell autenticado del panel
+    events/               # Vistas del modulo de eventos
+    profile/              # Vistas del perfil
+routes/
+  web.php                 # Definicion de rutas admin y portal
+tests/
+  Feature/                # Pruebas funcionales principales
+```
+
+## Convenciones del proyecto
+
+- Mantener textos de interfaz en espanol
+- Reutilizar componentes Blade antes de duplicar markup
+- No mezclar nuevas funcionalidades autenticadas fuera de `admin.*` o `portal.*`
+- Si cambia la autorizacion, ajustar primero la capa de capacidades
+- Si cambia el flujo de eventos, revisar policies, requests y tests del modulo
+
+## Documentacion interna
+
+Para contexto operativo del repositorio y estandares de trabajo del proyecto, revisar:
+
+- [AGENTS.md](AGENTS.md)
+
+## Estado actual
+
+Base funcional implementada:
+
+- autenticacion
+- roles base
+- dashboards
+- modulo de eventos
+- inscripciones
+- menu administrativo y portal
+- breadcrumbs
+- autorizacion centralizada por capacidades
+
+## Licencia
+
+Proyecto de uso interno. Definir licencia publica antes de distribucion externa.

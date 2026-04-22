@@ -1,29 +1,33 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Profile') }}
-        </h2>
+        <x-page-header
+            eyebrow="Cuenta"
+            title="Perfil"
+            description="Gestiona tus datos personales, seguridad y configuracion de acceso desde una estructura uniforme con el resto del panel."
+            :breadcrumbs="[
+                ['label' => 'Portal', 'href' => route('portal.dashboard')],
+                ['label' => 'Perfil', 'current' => true],
+            ]"
+        />
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            <div class="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.update-profile-information-form')
-                </div>
+    <div class="mx-auto max-w-5xl space-y-6">
+        <x-panel>
+            <div class="max-w-2xl">
+                @include('profile.partials.update-profile-information-form')
             </div>
+        </x-panel>
 
-            <div class="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.update-password-form')
-                </div>
+        <x-panel>
+            <div class="max-w-2xl">
+                @include('profile.partials.update-password-form')
             </div>
+        </x-panel>
 
-            <div class="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.delete-user-form')
-                </div>
+        <x-panel class="border-rose-200">
+            <div class="max-w-2xl">
+                @include('profile.partials.delete-user-form')
             </div>
-        </div>
+        </x-panel>
     </div>
 </x-app-layout>

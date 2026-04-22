@@ -40,7 +40,7 @@ test('regular users can not create events', function () {
         'role' => 'user',
     ]);
 
-    $response = $this->actingAs($user)->get('/events/create');
+    $response = $this->actingAs($user)->get(route('admin.events.create'));
 
     $response->assertForbidden();
 });
@@ -54,7 +54,7 @@ test('coordinators can create events', function () {
 
     $response = $this
         ->actingAs($user)
-        ->post('/events', [
+        ->post(route('admin.events.store'), [
             'name' => 'Evento autorizado',
             'description' => 'Creado por coordinacion',
             'date' => Carbon::now()->addWeek()->format('Y-m-d'),
@@ -66,7 +66,7 @@ test('coordinators can create events', function () {
             'parking_slots' => null,
         ]);
 
-    $response->assertRedirect(route('events.create', absolute: false));
+    $response->assertRedirect(route('admin.events.create', absolute: false));
     expect(Event::query()->where('name', 'Evento autorizado')->exists())->toBeTrue();
 });
 
@@ -91,11 +91,11 @@ test('coordinators can edit events but can not delete them', function () {
     ]);
 
     $this->actingAs($user)
-        ->get(route('events.edit', $event))
+        ->get(route('admin.events.edit', $event))
         ->assertOk();
 
     $this->actingAs($user)
-        ->delete(route('events.destroy', $event))
+        ->delete(route('admin.events.destroy', $event))
         ->assertForbidden();
 });
 
@@ -120,8 +120,8 @@ test('administrators can delete events', function () {
     ]);
 
     $this->actingAs($user)
-        ->delete(route('events.destroy', $event))
-        ->assertRedirect(route('events.index', absolute: false));
+        ->delete(route('admin.events.destroy', $event))
+        ->assertRedirect(route('admin.events.index', absolute: false));
 
     expect(Event::query()->whereKey($event->id)->exists())->toBeFalse();
 });
@@ -151,15 +151,15 @@ test('regular users can view events but can not edit them', function () {
     ]);
 
     $this->actingAs($user)
-        ->get(route('events.index'))
+        ->get(route('portal.events.index'))
         ->assertOk();
 
     $this->actingAs($user)
-        ->get(route('events.show', $event))
+        ->get(route('portal.events.show', $event))
         ->assertOk();
 
     $this->actingAs($user)
-        ->get(route('events.edit', $event))
+        ->get(route('admin.events.edit', $event))
         ->assertForbidden();
 });
 
@@ -176,7 +176,7 @@ test('users with inactive roles are redirected to login from protected routes', 
         'role' => 'user',
     ]);
 
-    $response = $this->actingAs($user)->get('/profile');
+    $response = $this->actingAs($user)->get(route('portal.profile.edit'));
 
     $response->assertRedirect(route('login', absolute: false));
     $this->assertGuest();

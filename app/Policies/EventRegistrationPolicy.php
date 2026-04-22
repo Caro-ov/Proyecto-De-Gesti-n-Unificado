@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Auth\Capability;
 use App\Models\Event;
 use App\Models\EventRegistration;
 use App\Models\User;
@@ -13,7 +14,7 @@ class EventRegistrationPolicy
      */
     public function viewAny(User $user, Event $event): bool
     {
-        return $user->hasAnyActiveRole(['admin', 'coordinator']);
+        return $user->hasCapability(Capability::REGISTRATIONS_VIEW_ANY);
     }
 
     /**
@@ -21,7 +22,7 @@ class EventRegistrationPolicy
      */
     public function create(User $user, Event $event): bool
     {
-        return $user->hasActiveRole();
+        return $user->hasCapability(Capability::REGISTRATIONS_CREATE);
     }
 
     /**
@@ -29,8 +30,9 @@ class EventRegistrationPolicy
      */
     public function view(User $user, EventRegistration $registration): bool
     {
-        return $user->id === $registration->user_id
-            || $user->hasAnyActiveRole(['admin', 'coordinator']);
+        return ($user->id === $registration->user_id
+            && $user->hasCapability(Capability::REGISTRATIONS_VIEW_OWN))
+            || $user->hasCapability(Capability::REGISTRATIONS_VIEW_ANY);
     }
 
     /**
@@ -38,7 +40,7 @@ class EventRegistrationPolicy
      */
     public function update(User $user, EventRegistration $registration): bool
     {
-        return $user->hasAnyActiveRole(['admin', 'coordinator']);
+        return $user->hasCapability(Capability::REGISTRATIONS_UPDATE_ANY);
     }
 
     /**
@@ -46,7 +48,8 @@ class EventRegistrationPolicy
      */
     public function delete(User $user, EventRegistration $registration): bool
     {
-        return $user->id === $registration->user_id
-            || $user->hasAnyActiveRole(['admin', 'coordinator']);
+        return ($user->id === $registration->user_id
+            && $user->hasCapability(Capability::REGISTRATIONS_DELETE_OWN))
+            || $user->hasCapability(Capability::REGISTRATIONS_DELETE_ANY);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\EventStatus;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -41,12 +42,25 @@ class Event extends Model
         return [
             'date' => 'date',
             'time' => 'datetime',
-            'status' => EventStatus::class,
             'has_parking' => 'boolean',
             'capacity' => 'integer',
             'parking_slots' => 'integer',
             'user_id' => 'integer',
         ];
+    }
+
+    protected function status(): Attribute
+    {
+        return Attribute::make(
+            get: static fn (?string $value): ?EventStatus => $value === null
+                ? null
+                : EventStatus::normalize($value),
+            set: static fn (EventStatus|string|null $value): ?string => match (true) {
+                $value instanceof EventStatus => $value->value,
+                $value === null => null,
+                default => EventStatus::normalize($value)->value,
+            },
+        );
     }
 
     public function user(): BelongsTo
@@ -105,8 +119,13 @@ class Event extends Model
 
     public function registrationRestrictionMessage(): ?string
     {
-        return $this->statusEnum()?->registrationRestrictionMessage()
-            ?? 'Las inscripciones solo estan disponibles para eventos activos o abiertos.';
+        $status = $this->statusEnum();
+
+        if ($status === null) {
+            return 'Las inscripciones solo estan disponibles para eventos activos o abiertos.';
+        }
+
+        return $status->registrationRestrictionMessage();
     }
 
     public function statusLabel(): string
