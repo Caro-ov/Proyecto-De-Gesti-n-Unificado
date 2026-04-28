@@ -2,13 +2,23 @@
 
 namespace App\Models;
 
+use App\Enums\EventStatus;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Event extends Model
 {
     use HasFactory;
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
         'name',
         'description',
@@ -22,17 +32,105 @@ class Event extends Model
         'user_id',
     ];
 
-    protected $casts = [
-        'date' => 'date',
-        'time' => 'datetime',
-        'has_parking' => 'boolean',
-    ];
-
     /**
-     * El usuario que creó/organiza este evento
+     * The attributes that should be cast.
+     *
+     * @return array<string, string>
      */
-    public function user()
+    protected function casts(): array
+    {
+        return [
+            'date' => 'date',
+            'time' => 'datetime',
+            'has_parking' => 'boolean',
+            'capacity' => 'integer',
+            'parking_slots' => 'integer',
+            'user_id' => 'integer',
+        ];
+    }
+
+    protected function status(): Attribute
+    {
+        return Attribute::make(
+            get: static fn (?string $value): ?EventStatus => $value === null
+                ? null
+                : EventStatus::normalize($value),
+            set: static fn (EventStatus|string|null $value): ?string => match (true) {
+                $value instanceof EventStatus => $value->value,
+                $value === null => null,
+                default => EventStatus::normalize($value)->value,
+            },
+        );
+    }
+
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function registrations(): HasMany
+    {
+        return $this->hasMany(EventRegistration::class);
+    }
+
+    public function attendees(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'event_registrations')
+            ->withPivot([
+                'id',
+                'status',
+                'registered_at',
+                'cancelled_at',
+                'attended_at',
+                'notes',
+            ])
+            ->withTimestamps();
+    }
+
+    public function confirmedRegistrationsCount(?int $excludeRegistrationId = null): int
+    {
+        return $this->registrations()
+            ->when($excludeRegistrationId !== null, fn ($query) => $query->whereKeyNot($excludeRegistrationId))
+            ->whereIn('status', [
+                EventRegistration::STATUS_REGISTERED,
+                EventRegistration::STATUS_ATTENDED,
+            ])
+            ->count();
+    }
+
+    public function remainingCapacity(?int $excludeRegistrationId = null): int
+    {
+        return max(0, $this->capacity - $this->confirmedRegistrationsCount($excludeRegistrationId));
+    }
+
+    public function statusEnum(): ?EventStatus
+    {
+        if ($this->status instanceof EventStatus) {
+            return $this->status;
+        }
+
+        return EventStatus::tryFrom((string) $this->status);
+    }
+
+    public function acceptsRegistrations(): bool
+    {
+        return $this->statusEnum()?->acceptsRegistrations() ?? false;
+    }
+
+    public function registrationRestrictionMessage(): ?string
+    {
+        $status = $this->statusEnum();
+
+        if ($status === null) {
+            return 'Las inscripciones solo estan disponibles para eventos activos o abiertos.';
+        }
+
+        return $status->registrationRestrictionMessage();
+    }
+
+    public function statusLabel(): string
+    {
+        return $this->statusEnum()?->label()
+            ?? ucfirst((string) $this->status);
     }
 }

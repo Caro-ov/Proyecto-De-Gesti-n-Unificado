@@ -39,3 +39,18 @@ test('users can logout', function () {
     $this->assertGuest();
     $response->assertRedirect('/');
 });
+
+test('inactive users can not authenticate using the login screen', function () {
+    $user = User::factory()->create([
+        'status' => false,
+    ]);
+
+    $response = $this->from('/login')->post('/login', [
+        'email' => $user->email,
+        'password' => 'password',
+    ]);
+
+    $response->assertRedirect('/login');
+    $response->assertSessionHasErrors(['email']);
+    $this->assertGuest();
+});
