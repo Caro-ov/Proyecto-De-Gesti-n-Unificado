@@ -6,6 +6,7 @@ use App\Models\Event;
 use App\Models\EventRegistration;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class EventRegistrationSeeder extends Seeder
 {
@@ -22,6 +23,7 @@ class EventRegistrationSeeder extends Seeder
                 'registered_at' => now()->subDays(2),
                 'cancelled_at' => null,
                 'attended_at' => null,
+                'checked_in_at' => null,
                 'notes' => 'Registro confirmado para el flujo base',
             ],
             [
@@ -31,6 +33,7 @@ class EventRegistrationSeeder extends Seeder
                 'registered_at' => now()->subDays(4),
                 'cancelled_at' => now()->subDays(1),
                 'attended_at' => null,
+                'checked_in_at' => null,
                 'notes' => 'Cancelado por cambio de agenda',
             ],
             [
@@ -40,6 +43,7 @@ class EventRegistrationSeeder extends Seeder
                 'registered_at' => now()->subDay(),
                 'cancelled_at' => null,
                 'attended_at' => null,
+                'checked_in_at' => null,
                 'notes' => 'Coordinacion inscrita para seguimiento',
             ],
             [
@@ -49,6 +53,7 @@ class EventRegistrationSeeder extends Seeder
                 'registered_at' => now()->subHours(8),
                 'cancelled_at' => null,
                 'attended_at' => null,
+                'checked_in_at' => null,
                 'notes' => 'Ocupa el unico cupo disponible',
             ],
             [
@@ -58,6 +63,7 @@ class EventRegistrationSeeder extends Seeder
                 'registered_at' => now()->subHours(4),
                 'cancelled_at' => null,
                 'attended_at' => null,
+                'checked_in_at' => null,
                 'notes' => 'Pendiente por liberacion de cupo',
             ],
             [
@@ -67,6 +73,7 @@ class EventRegistrationSeeder extends Seeder
                 'registered_at' => now()->subDays(12),
                 'cancelled_at' => null,
                 'attended_at' => now()->subDays(10),
+                'checked_in_at' => now()->subDays(10)->addHours(1),
                 'notes' => 'Asistencia historica confirmada',
             ],
         ];
@@ -92,6 +99,8 @@ class EventRegistrationSeeder extends Seeder
                     'registered_at' => $registration['registered_at'],
                     'cancelled_at' => $registration['cancelled_at'],
                     'attended_at' => $registration['attended_at'],
+                    'checked_in_at' => $registration['checked_in_at'],
+                    'qr_token' => Str::uuid(),
                     'notes' => $registration['notes'],
                 ],
             );

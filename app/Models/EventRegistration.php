@@ -29,6 +29,8 @@ class EventRegistration extends Model
         'cancelled_at',
         'attended_at',
         'notes',
+        'qr_token',
+        'checked_in_at',
     ];
 
     /**
@@ -42,6 +44,7 @@ class EventRegistration extends Model
             'registered_at' => 'datetime',
             'cancelled_at' => 'datetime',
             'attended_at' => 'datetime',
+            'checked_in_at' => 'datetime',
         ];
     }
 
@@ -93,5 +96,15 @@ class EventRegistration extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function isCheckedIn(): bool
+    {
+        return $this->checked_in_at !== null;
+    }
+
+    public function canCheckIn(): bool
+    {
+        return $this->status === self::STATUS_REGISTERED && !$this->isCheckedIn();
     }
 }
