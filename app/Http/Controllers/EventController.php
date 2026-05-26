@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\EventRequest;
+use App\Jobs\SendEventChangeNotification;
 use App\Models\Event;
 use App\Models\EventRegistration;
 use Illuminate\Http\RedirectResponse;
@@ -95,8 +96,23 @@ class EventController extends Controller
     public function update(EventRequest $request, Event $event): RedirectResponse
     {
         $validated = $request->validated();
+        $original = $event->getOriginal();
+
+        $changedFields = [];
+        foreach (['date', 'time', 'location'] as $field) {
+            if (isset($validated[$field]) && $validated[$field] != $original[$field]) {
+                $changedFields[$field] = [
+                    'old' => $original[$field],
+                    'new' => $validated[$field],
+                ];
+            }
+        }
 
         $event->update($validated);
+
+        if (!empty($changedFields)) {
+            SendEventChangeNotification::dispatch($event, $changedFields);
+        }
 
         return redirect()
             ->route('admin.events.index')
