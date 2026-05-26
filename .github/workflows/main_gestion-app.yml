@@ -30,8 +30,21 @@ jobs:
           files: 'composer.json'
 
       - name: Run composer install if composer.json exists
-        if: steps.check_files.outputs.files_exists == 'true'
-        run: composer validate --no-check-publish && composer install --prefer-dist --no-progress
+          if: steps.check_files.outputs.files_exists == 'true'
+          run: composer validate --no-check-publish && composer install --prefer-dist --no-progress
+
+        - name: Setup Node.js
+          uses: actions/setup-node@v4
+          with:
+            node-version: '20'
+
+        - name: Install Node dependencies
+          run: npm install
+
+        - name: Build frontend
+          run: npm run build
+
+        - name: Upload artifact for deployment job
 
 
       - name: Upload artifact for deployment job
