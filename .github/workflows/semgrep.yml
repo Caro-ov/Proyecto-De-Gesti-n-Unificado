@@ -28,8 +28,7 @@ jobs:
           fetch-depth: 0
 
       - name: Ejecutar análisis de Semgrep
-        # Actualizado a la acción oficial y moderna de Semgrep
-        uses: semgrep/github-action@v1 
+        uses: semgrep/semgrep-action@v1 
         with:
           config: >-
             p/owasp-top-ten
@@ -39,8 +38,7 @@ jobs:
           SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
 
       - name: Subir comentarios y alertas a GitHub Code Scanning
-        # Sube el reporte SARIF para que GitHub comente el PR de forma nativa
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: semgrep.sarif
-        if: always() # Se ejecuta incluso si Semgrep encuentra vulnerabilidades y falla
+        if: always()
