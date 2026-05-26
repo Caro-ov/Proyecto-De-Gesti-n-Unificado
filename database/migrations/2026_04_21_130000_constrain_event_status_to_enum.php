@@ -25,11 +25,15 @@ return new class extends Migration
                     ]);
             });
 
-        Schema::table('events', function (Blueprint $table): void {
-            $table->enum('status', EventStatus::values())
-                ->default(EventStatus::OPEN->value)
-                ->change();
-        });
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement('ALTER TABLE events ADD CONSTRAINT status_check CHECK (status IN (' . implode(',', array_map(fn($v) => "'$v'", EventStatus::values())) . '))');
+        } else {
+            Schema::table('events', function (Blueprint $table): void {
+                $table->enum('status', EventStatus::values())
+                    ->default(EventStatus::OPEN->value)
+                    ->change();
+            });
+        }
     }
 
     /**
