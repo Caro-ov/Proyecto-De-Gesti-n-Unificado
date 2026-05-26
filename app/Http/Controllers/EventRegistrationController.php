@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendRegistrationConfirmation;
 use App\Models\Event;
 use App\Models\EventRegistration;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -58,19 +60,25 @@ class EventRegistrationController extends Controller
                 'cancelled_at' => null,
                 'attended_at' => null,
                 'notes' => null,
+                'qr_token' => Str::uuid(),
             ];
 
             if ($existingRegistration !== null) {
                 $existingRegistration->update($payload);
-
-                return $existingRegistration->refresh();
+                $reg = $existingRegistration->refresh();
+            } else {
+                $reg = EventRegistration::query()->create([
+                    'event_id' => $lockedEvent->id,
+                    'user_id' => $request->user()->id,
+                    ...$payload,
+                ]);
             }
 
-            return EventRegistration::query()->create([
-                'event_id' => $lockedEvent->id,
-                'user_id' => $request->user()->id,
-                ...$payload,
-            ]);
+            if ($reg->status === EventRegistration::STATUS_REGISTERED) {
+                SendRegistrationConfirmation::dispatch($reg->id);
+            }
+
+            return $reg;
         });
 
         $showRouteName = $this->resolveShowRouteName($request);

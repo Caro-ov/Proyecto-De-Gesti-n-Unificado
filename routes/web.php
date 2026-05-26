@@ -1,10 +1,12 @@
 <?php
 
+use App\Http\Controllers\AttendanceReportController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventRegistrationController;
 use App\Http\Controllers\PortalDashboardController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RegistrationCheckInController;
 use App\Models\Event;
 use Illuminate\Support\Facades\Route;
 
@@ -41,6 +43,15 @@ Route::middleware(['auth', 'verified', 'active.role'])->group(function () {
             Route::get('/{event}', [EventController::class, 'show'])
                 ->can('view', 'event')
                 ->name('show');
+            Route::get('/{event}/check-in', [RegistrationCheckInController::class, 'show'])
+                ->can('update', 'event')
+                ->name('check-in');
+            Route::post('/{event}/check-in', [RegistrationCheckInController::class, 'checkIn'])
+                ->can('update', 'event')
+                ->name('check-in.store');
+            Route::get('/{event}/attendance', [AttendanceReportController::class, 'show'])
+                ->can('update', 'event')
+                ->name('attendance');
         });
     });
 
